@@ -3,11 +3,10 @@
 import { useEffect, useReducer } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
+import Link from "next/link";
 
 import type { Note } from "@/types/note";
 import NoteList from "@/components/NoteList/NoteList";
-import NoteForm from "@/components/NoteForm/NoteForm";
-import Modal from "@/components/Modal/Modal";
 import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 
@@ -23,15 +22,12 @@ type Props = {
 type State = {
   currentPage: number;
   search: string;
-  isModalOpen: boolean;
   currentTag: string;
 };
 
 type Action =
   | { type: "setSearch"; payload: string }
   | { type: "setPage"; payload: number }
-  | { type: "openModal" }
-  | { type: "closeModal" }
   | { type: "setTag"; payload: string };
 
 const PER_PAGE = 12;
@@ -49,18 +45,6 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         currentPage: action.payload,
-      };
-
-    case "openModal":
-      return {
-        ...state,
-        isModalOpen: true,
-      };
-
-    case "closeModal":
-      return {
-        ...state,
-        isModalOpen: false,
       };
 
     case "setTag":
@@ -116,7 +100,6 @@ export default function NotesClient({ tag }: Props) {
   const [state, dispatch] = useReducer(reducer, {
     currentPage: 1,
     search: "",
-    isModalOpen: false,
     currentTag: tag,
   });
 
@@ -133,6 +116,7 @@ export default function NotesClient({ tag }: Props) {
       "notes",
       {
         page: state.currentPage,
+        perPage: PER_PAGE,
         search: debouncedSearch,
         tag: state.currentTag,
       },
@@ -167,9 +151,7 @@ export default function NotesClient({ tag }: Props) {
           }
         />
 
-        <button type="button" onClick={() => dispatch({ type: "openModal" })}>
-          Create note
-        </button>
+        <Link href="/notes/action/create">Create note</Link>
       </div>
 
       {isLoading && <p>Loading notes...</p>}
@@ -188,12 +170,6 @@ export default function NotesClient({ tag }: Props) {
             dispatch({ type: "setPage", payload: page })
           }
         />
-      )}
-
-      {state.isModalOpen && (
-        <Modal onClose={() => dispatch({ type: "closeModal" })}>
-          <NoteForm onClose={() => dispatch({ type: "closeModal" })} />
-        </Modal>
       )}
     </section>
   );
